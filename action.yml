@@ -1,0 +1,6 @@
+name: 'Tagger'
+description: 'auto pushes a git tag'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
