@@ -19,16 +19,20 @@ func (v Version) String() string {
 	return fmt.Sprintf("v%d.%d.%d", v.major, v.minor, v.patch)
 }
 
-func (v Version) BumpMajor() Version {
-	return Version{v.major + 1, 0, 0}
+func (v Version) Bump(major, minor, patch bool) Version {
+	if major {
+		return Version{v.major + 1, 0, 0}
+	} else if minor {
+		return Version{v.major, v.minor + 1, 0}
+	} else if patch {
+		return Version{v.major, v.minor, v.patch + 1}
+	}
+
+	return v
 }
 
-func (v Version) BumpMinor() Version {
-	return Version{v.major, v.minor + 1, 0}
-}
-
-func (v Version) BumpPatch() Version {
-	return Version{v.major, v.minor, v.patch + 1}
+func (v Version) Equals(other Version) bool {
+	return v.major == other.major && v.minor == other.minor && v.patch == other.patch
 }
 
 type Tag string
@@ -120,7 +124,7 @@ func LatestTag() (Tag, error) {
 		return "", fmt.Errorf("git describe: %w", err)
 	}
 
-	return Tag(out), nil
+	return Tag(strings.TrimSpace(out)), nil
 }
 
 func CommitsSince(tag Tag) (iter.Seq[Commit], error) {

@@ -44,12 +44,11 @@ func run() error {
 		}
 	}
 
-	if major {
-		version = version.BumpMajor()
-	} else if minor {
-		version = version.BumpMinor()
-	} else if patch {
-		version = version.BumpPatch()
+	newVersion := version.Bump(major, minor, patch)
+
+	if version.Equals(newVersion) {
+		fmt.Println("no version change")
+		return nil
 	}
 
 	fmt.Println("next version: ", version)
