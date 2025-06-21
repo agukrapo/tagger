@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iter"
 	"os/exec"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -80,7 +81,14 @@ func (c Change) String() string {
 type Commit string
 
 func (c Commit) Change() Change {
-	chunks := strings.Split(string(c), ":")
+	re := regexp.MustCompile(`^(\w+)( \(.+\))? (?P<message>.+)$`)
+
+	matches := re.FindStringSubmatch(string(c))
+	if len(matches) == 0 {
+		return None
+	}
+
+	chunks := strings.Split(matches[re.SubexpIndex("message")], ":")
 	if len(chunks) == 1 {
 		return None
 	}

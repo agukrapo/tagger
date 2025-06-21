@@ -33,7 +33,6 @@ func run() error {
 	}
 
 	var major, minor, patch bool
-
 	for commit := range commits {
 		switch commit.Change() {
 		case git.Breaking:

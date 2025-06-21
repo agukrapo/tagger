@@ -10,43 +10,43 @@ func TestCommit_Change(t *testing.T) {
 	}{
 		{
 			"Breaking",
-			"chore!: drop support for Node 6",
+			"b2504f5 chore!: drop support for Node 6",
 			Breaking,
 		},
 		{
 			"Breaking (scope)",
-			"feat(api)!: send an email to the customer when a product is shipped",
+			"4d0442b (origin/fixes, fixes) feat(api)!: send an email to the customer when a product is shipped",
 			Breaking,
 		},
 
 		{
 			"Feat",
-			"feat: allow provided config object to extend other configs",
+			"db5a126 (HEAD -> feat/ws) feat: allow provided config object to extend other configs",
 			Feat,
 		},
 		{
 			"Feat (scope)",
-			"feat(lang): add Polish language",
+			"b2504f5 feat(lang): add Polish language",
 			Feat,
 		},
 		{
 			"Fix",
-			"fix: prevent racing of requests",
+			"6f99d20 fix: prevent racing of requests",
 			Fix,
 		},
 		{
 			"Fix (scope)",
-			"fix(lang): prevent racing of requests",
+			"da17a5d (origin/feat/client_switch, feat/client_switch) fix(lang): prevent racing of requests",
 			Fix,
 		},
 		{
 			"None",
-			"docs: correct spelling of CHANGELOG",
+			"6d52e21 (origin/env/prod) docs: correct spelling of CHANGELOG",
 			None,
 		},
 		{
 			"None (scope)",
-			"docs(lang): update ref docs",
+			"e4ae48f docs(lang): update ref docs",
 			None,
 		},
 	}
