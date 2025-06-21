@@ -51,14 +51,14 @@ func run() error {
 		return nil
 	}
 
-	fmt.Println("next version: ", version)
+	fmt.Println("new version: ", newVersion)
 
 	fmt.Println("continue?")
 	if _, err := fmt.Scanln(); err != nil {
 		return err
 	}
 
-	if err := git.Push(version); err != nil {
+	if err := git.Push(newVersion); err != nil {
 		return err
 	}
 
