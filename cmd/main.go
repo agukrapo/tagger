@@ -1,10 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/agukrapo/tagger/git"
+	"github.com/agukrapo/tagger/versions"
 )
 
 func main() {
@@ -15,52 +18,41 @@ func main() {
 }
 
 func run() error {
-	tag, err := git.LatestTag()
+	local := flag.Bool("local", false, "Uses local git")
+
+	if *local {
+		return versions.Process(git.Client{})
+	}
+
+	host, err := env("GITHUB_API_URL")
 	if err != nil {
 		return err
 	}
 
-	version, err := tag.AsVersion()
+	ownerRepo, err := env("GITHUB_REPOSITORY")
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("current version: ", version)
+	chunks := strings.Split(ownerRepo, "/")
+	if len(chunks) != 2 {
+		return fmt.Errorf("invalid owner/repository: %s", ownerRepo)
+	}
 
-	commits, err := git.CommitsSince(tag)
+	token, err := env("GITHUB_TOKEN")
 	if err != nil {
 		return err
 	}
 
-	var major, minor, patch bool
-	for commit := range commits {
-		switch commit.Change() {
-		case git.Breaking:
-			major = true
-		case git.Feat:
-			minor = true
-		case git.Fix:
-			patch = true
-		}
-	}
+	fmt.Println("~~>>> TAgger ", host, chunks[0], chunks[1], token)
 
-	newVersion := version.Bump(major, minor, patch)
-
-	if version.Equals(newVersion) {
-		fmt.Println("no version change")
-		return nil
-	}
-
-	fmt.Println("new version: ", newVersion)
-
-	fmt.Println("continue?")
-	if _, err := fmt.Scanln(); err != nil {
-		return err
-	}
-
-	if err := git.Push(newVersion); err != nil {
-		return err
-	}
-
+	// return versions.Process(github.New(chunks[0], chunks[1], host, token))
 	return nil
+}
+
+func env(name string) (string, error) {
+	if out, ok := os.LookupEnv(name); ok {
+		return out, nil
+	}
+	return "", fmt.Errorf("environment variable %s not set", name)
 }
