@@ -44,27 +44,32 @@ func (t Tag) asVersion() (Version, error) {
 	}
 
 	if !strings.HasPrefix(string(t), "v") {
-		return Version{}, fmt.Errorf("invalid tag: %s", t)
+		return Version{}, fmt.Errorf("invalid tag %q", t)
 	}
 
 	chunks := strings.Split(string(t[1:]), ".")
-	if len(chunks) != 3 {
-		return Version{}, fmt.Errorf("invalid tag: %s", t)
+	if len(chunks) == 0 || len(chunks) > 3 {
+		return Version{}, fmt.Errorf("invalid tag %q", t)
 	}
 
-	major, err := strconv.Atoi(chunks[0])
-	if err != nil {
-		return Version{}, fmt.Errorf("invalid tag: %s", t)
-	}
+	var major, minor, patch int
 
-	minor, err := strconv.Atoi(chunks[1])
-	if err != nil {
-		return Version{}, fmt.Errorf("invalid tag: %s", t)
-	}
+	for i, chunk := range chunks {
+		v, err := strconv.Atoi(chunk)
+		if err != nil {
+			return Version{}, fmt.Errorf("invalid tag %q", t)
+		}
 
-	patch, err := strconv.Atoi(chunks[2])
-	if err != nil {
-		return Version{}, fmt.Errorf("invalid tag: %s", t)
+		switch i {
+		case 0:
+			major = v
+		case 1:
+			minor = v
+		case 2:
+			patch = v
+		default:
+			return Version{}, fmt.Errorf("invalid tag %q", t)
+		}
 	}
 
 	return Version{major, minor, patch}, nil

@@ -1,6 +1,9 @@
 package versions
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestCommit_Change(t *testing.T) {
 	tests := []struct {
@@ -56,5 +59,62 @@ func TestCommit_Change(t *testing.T) {
 				t.Errorf("Change() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestTag_asVersion(t *testing.T) {
+	tests := []struct {
+		tag     Tag
+		version Version
+		error   string
+	}{
+		{
+			tag:   "latest",
+			error: `invalid tag "latest"`,
+		},
+		{
+			tag:   "valpha",
+			error: `invalid tag "valpha"`,
+		},
+		{
+			tag:   "v",
+			error: `invalid tag "v"`,
+		},
+		{
+			tag:     "v1",
+			version: Version{1, 0, 0},
+		},
+		{
+			tag:     "v1.2",
+			version: Version{1, 2, 0},
+		},
+		{
+			tag:     "v1.2.3",
+			version: Version{1, 2, 3},
+		},
+		{
+			tag:   "v1.2.3.4",
+			error: `invalid tag "v1.2.3.4"`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.tag), func(t *testing.T) {
+			got, err := tt.tag.asVersion()
+			if errNotEqual(tt.error, err) {
+				t.Errorf("asVersion() err = %v, error %v", err, tt.error)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.version) {
+				t.Errorf("asVersion() got = %v, want %v", got, tt.version)
+			}
+		})
+	}
+}
+
+func errNotEqual(errStr string, err error) bool {
+	if errStr == "" {
+		return err != nil
+	} else {
+		return err == nil || err.Error() != errStr
 	}
 }
