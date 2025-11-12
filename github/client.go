@@ -2,7 +2,6 @@ package github
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -90,6 +89,10 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	return out, nil
 }
 
+type errorResponse struct {
+	Message string `json:"message"`
+}
+
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
 	reqBody := strings.NewReader(fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit.SHA(), version))
 	req, err := http.NewRequest(http.MethodPost, c.url("git/refs"), reqBody)
@@ -115,7 +118,11 @@ func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
 	fmt.Printf("Create tag response: %s, %s\n", res.Status, resBody)
 
 	if res.StatusCode != http.StatusCreated {
-		return errors.New("create tag failed")
+		var errRes errorResponse
+		if err := json.Unmarshal(resBody, &errRes); err != nil {
+			return fmt.Errorf("json.Unmarshal: %w", err)
+		}
+		return fmt.Errorf("create tag failed: %s", errRes.Message)
 	}
 
 	return nil
