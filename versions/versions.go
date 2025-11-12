@@ -2,7 +2,6 @@ package versions
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -101,14 +100,7 @@ func (c *Commit) SHA() string {
 }
 
 func (c *Commit) change() Change {
-	re := regexp.MustCompile(`^(\w+)( \(.+\))? (?P<message>.+)$`)
-
-	matches := re.FindStringSubmatch(c.message)
-	if len(matches) == 0 {
-		return None
-	}
-
-	chunks := strings.Split(matches[re.SubexpIndex("message")], ":")
+	chunks := strings.Split(c.message, ":")
 	if len(chunks) == 1 {
 		return None
 	}
