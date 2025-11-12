@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/agukrapo/tagger/git"
+	"github.com/agukrapo/tagger/github"
 	"github.com/agukrapo/tagger/versions"
 )
 
@@ -44,10 +45,7 @@ func run() error {
 		return err
 	}
 
-	fmt.Println("~~>>> TAgger ", host, chunks[0], chunks[1], token)
-
-	// return versions.Process(github.New(chunks[0], chunks[1], host, token))
-	return nil
+	return versions.Process(github.New(chunks[0], chunks[1], host, token))
 }
 
 func env(name string) (string, error) {

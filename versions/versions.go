@@ -116,7 +116,7 @@ func (c Commit) change() Change {
 type provider interface {
 	LatestTag() (Tag, error)
 	CommitsSince(tag Tag) ([]Commit, error)
-	Push(Version) error
+	Push(Commit, Version) error
 }
 
 func Process(p provider) error {
@@ -139,6 +139,8 @@ func Process(p provider) error {
 
 	var major, minor, patch bool
 	for _, commit := range commits {
+		fmt.Printf("commit %q\n", commit)
+
 		switch commit.change() {
 		case Breaking:
 			major = true
@@ -158,12 +160,9 @@ func Process(p provider) error {
 
 	fmt.Println("new version: ", newVersion)
 
-	fmt.Println("continue?")
-	if _, err := fmt.Scanln(); err != nil {
-		return err
-	}
+	lastCommit := commits[len(commits)-1]
 
-	if err := p.Push(newVersion); err != nil {
+	if err := p.Push(lastCommit, newVersion); err != nil {
 		return err
 	}
 

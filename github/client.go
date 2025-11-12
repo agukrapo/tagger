@@ -2,7 +2,9 @@ package github
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -36,14 +38,14 @@ type tagResponse []struct {
 func (c *Client) LatestTag() (versions.Tag, error) {
 	// FIXME use token for private repos
 
-	resp, err := c.client.Get(c.url("tags"))
+	res, err := c.client.Get(c.url("tags"))
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
 	var tags tagResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tags); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&tags); err != nil {
 		return "", err
 	}
 
@@ -65,14 +67,14 @@ type compareResponse struct {
 }
 
 func (c *Client) CommitsSince(tag versions.Tag) ([]versions.Commit, error) {
-	resp, err := c.client.Get(c.url(fmt.Sprintf("compare/%s...HEAD", tag)))
+	res, err := c.client.Get(c.url(fmt.Sprintf("compare/%s...HEAD", tag)))
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
 	var payload compareResponse
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
 		return nil, err
 	}
 
@@ -85,8 +87,33 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]versions.Commit, error) {
 	return out, nil
 }
 
-func (c *Client) Push(version versions.Version) error {
-	// TODO call api
+func (c *Client) Push(commit versions.Commit, version versions.Version) error {
+	reqBody := strings.NewReader(fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit, version))
+	req, err := http.NewRequest(http.MethodPost, c.url("git/refs"), reqBody)
+	if err != nil {
+		return fmt.Errorf("http.NewRequest: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("client.Do: %w", err)
+	}
+	defer res.Body.Close()
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("io.ReadAll: %w", err)
+	}
+
+	fmt.Printf("Create tag response: %s, %s\n", res.Status, resBody)
+
+	if res.StatusCode != http.StatusCreated {
+		return errors.New("create tag failed")
+	}
 
 	return nil
 }

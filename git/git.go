@@ -47,7 +47,7 @@ func (Client) CommitsSince(tag versions.Tag) ([]versions.Commit, error) {
 	return out, nil
 }
 
-func (Client) Push(version versions.Version) error {
+func (Client) Push(_ versions.Commit, version versions.Version) error {
 	if _, err := command("git", "tag", version.String()); err != nil {
 		return fmt.Errorf("git tag: %w", err)
 	}
