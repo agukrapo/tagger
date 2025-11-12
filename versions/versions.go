@@ -137,7 +137,7 @@ func Process(p provider) error {
 		return err
 	}
 
-	fmt.Println("current version: ", version)
+	fmt.Println("Current version: ", version)
 
 	commits, err := p.CommitsSince(tag)
 	if err != nil {
@@ -146,7 +146,7 @@ func Process(p provider) error {
 
 	var major, minor, patch bool
 	for _, commit := range commits {
-		fmt.Printf("commit %s %q\n", commit.sha, commit.message)
+		fmt.Printf("Commit %s %q\n", commit.sha, commit.message)
 
 		switch commit.change() {
 		case Breaking:
@@ -161,11 +161,11 @@ func Process(p provider) error {
 	newVersion := version.bump(major, minor, patch)
 
 	if version.equals(newVersion) {
-		fmt.Println("no version change")
+		fmt.Println("No version change")
 		return nil
 	}
 
-	fmt.Println("new version: ", newVersion)
+	fmt.Println("New version: ", newVersion)
 
 	lastCommit := commits[len(commits)-1]
 
