@@ -88,12 +88,22 @@ func (c Change) String() string {
 	return [...]string{"none", "breaking", "feat", "fix"}[c]
 }
 
-type Commit string
+type Commit struct {
+	sha, message string
+}
 
-func (c Commit) change() Change {
+func NewCommit(sha, message string) *Commit {
+	return &Commit{sha, message}
+}
+
+func (c *Commit) SHA() string {
+	return c.sha
+}
+
+func (c *Commit) change() Change {
 	re := regexp.MustCompile(`^(\w+)( \(.+\))? (?P<message>.+)$`)
 
-	matches := re.FindStringSubmatch(string(c))
+	matches := re.FindStringSubmatch(c.message)
 	if len(matches) == 0 {
 		return None
 	}
@@ -120,8 +130,8 @@ func (c Commit) change() Change {
 
 type provider interface {
 	LatestTag() (Tag, error)
-	CommitsSince(tag Tag) ([]Commit, error)
-	Push(Commit, Version) error
+	CommitsSince(tag Tag) ([]*Commit, error)
+	Push(*Commit, Version) error
 }
 
 func Process(p provider) error {
@@ -144,7 +154,7 @@ func Process(p provider) error {
 
 	var major, minor, patch bool
 	for _, commit := range commits {
-		fmt.Printf("commit %q\n", commit)
+		fmt.Printf("commit %s %q\n", commit.sha, commit.message)
 
 		switch commit.change() {
 		case Breaking:

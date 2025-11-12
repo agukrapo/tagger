@@ -7,9 +7,9 @@ import (
 
 func TestCommit_Change(t *testing.T) {
 	tests := []struct {
-		name   string
-		commit Commit
-		want   Change
+		name string
+		msg  string
+		want Change
 	}{
 		{
 			"Breaking",
@@ -55,7 +55,10 @@ func TestCommit_Change(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.commit.change(); got != tt.want {
+			commit := &Commit{
+				message: tt.msg,
+			}
+			if got := commit.change(); got != tt.want {
 				t.Errorf("Change() = %v, want %v", got, tt.want)
 			}
 		})

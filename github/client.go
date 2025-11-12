@@ -62,11 +62,14 @@ type compareResponse struct {
 	Commits []struct {
 		Data struct {
 			Message string `json:"message"`
+			Tree    struct {
+				Sha string `json:"sha"`
+			} `json:"tree"`
 		} `json:"commit"`
 	} `json:"commits"`
 }
 
-func (c *Client) CommitsSince(tag versions.Tag) ([]versions.Commit, error) {
+func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	res, err := c.client.Get(c.url(fmt.Sprintf("compare/%s...HEAD", tag)))
 	if err != nil {
 		return nil, err
@@ -78,17 +81,17 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]versions.Commit, error) {
 		return nil, err
 	}
 
-	out := make([]versions.Commit, 0, len(payload.Commits))
+	out := make([]*versions.Commit, 0, len(payload.Commits))
 	for _, commit := range payload.Commits {
 		chunks := strings.Split(commit.Data.Message, "\n")
-		out = append(out, versions.Commit(strings.TrimSpace(chunks[0])))
+		out = append(out, versions.NewCommit(commit.Data.Tree.Sha, strings.TrimSpace(chunks[0])))
 	}
 
 	return out, nil
 }
 
-func (c *Client) Push(commit versions.Commit, version versions.Version) error {
-	reqBody := strings.NewReader(fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit, version))
+func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
+	reqBody := strings.NewReader(fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit.SHA(), version))
 	req, err := http.NewRequest(http.MethodPost, c.url("git/refs"), reqBody)
 	if err != nil {
 		return fmt.Errorf("http.NewRequest: %w", err)

@@ -1,12 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/agukrapo/tagger/git"
 	"github.com/agukrapo/tagger/github"
 	"github.com/agukrapo/tagger/versions"
 )
@@ -19,12 +17,6 @@ func main() {
 }
 
 func run() error {
-	local := flag.Bool("local", false, "Uses local git")
-
-	if *local {
-		return versions.Process(git.Client{})
-	}
-
 	host, err := env("GITHUB_API_URL")
 	if err != nil {
 		return err
