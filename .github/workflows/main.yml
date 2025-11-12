@@ -1,0 +1,41 @@
+name: Main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  
+jobs:
+  Main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v5
+      
+      - name: Go setup
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install build dependencies
+        run: make deps
+
+      - name: Code build
+        run: make build
+
+      - name: Code format
+        run: make format && git diff --exit-code
+      
+      - name: Code test
+        run: make test
+      
+      - name: Code lint
+        run: make lint
+
+      - name: tagger
+        uses: agukrapo/tagger@v0.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
