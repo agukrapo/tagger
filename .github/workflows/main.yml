@@ -18,6 +18,7 @@ jobs:
       - name: Go setup
         uses: actions/setup-go@v6
         with:
+          cache: false
           go-version-file: go.mod
 
       - name: Install build dependencies
