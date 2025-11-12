@@ -94,8 +94,9 @@ type errorResponse struct {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	reqBody := strings.NewReader(fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit.SHA(), version))
-	req, err := http.NewRequest(http.MethodPost, c.url("git/refs"), reqBody)
+	reqBody := fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit.SHA(), version)
+	url := c.url("git/refs")
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(reqBody))
 	if err != nil {
 		return fmt.Errorf("http.NewRequest: %w", err)
 	}
@@ -115,9 +116,10 @@ func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
 		return fmt.Errorf("io.ReadAll: %w", err)
 	}
 
-	fmt.Printf("Create tag response: %s, %s\n", res.Status, resBody)
-
 	if res.StatusCode != http.StatusCreated {
+		fmt.Printf("Create tag request: %s, %s\n", url, reqBody)
+		fmt.Printf("Create tag response: %s, %s\n", res.Status, resBody)
+
 		var errRes errorResponse
 		if err := json.Unmarshal(resBody, &errRes); err != nil {
 			return fmt.Errorf("json.Unmarshal: %w", err)
