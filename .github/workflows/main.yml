@@ -35,7 +35,7 @@ jobs:
       - name: Code lint
         run: make lint
 
-      - name: tagger
+      - name: Tagger
         uses: agukrapo/tagger@v0.1.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
