@@ -29,7 +29,7 @@ func run() error {
 
 	chunks := strings.Split(ownerRepo, "/")
 	if len(chunks) != 2 {
-		return fmt.Errorf("invalid owner/repository: %s", ownerRepo)
+		return fmt.Errorf("invalid owner/repository %q", ownerRepo)
 	}
 
 	token, err := env("GITHUB_TOKEN")
