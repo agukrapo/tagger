@@ -11,7 +11,17 @@ type Version struct {
 }
 
 func (v Version) String() string {
-	return fmt.Sprintf("v%d.%d.%d", v.major, v.minor, v.patch)
+	var patch string
+	if v.patch != 0 {
+		patch = fmt.Sprintf(".%d", v.patch)
+	}
+
+	var minor string
+	if v.minor != 0 || patch != "" {
+		minor = fmt.Sprintf(".%d%s", v.minor, patch)
+	}
+
+	return fmt.Sprintf("v%d%s", v.major, minor)
 }
 
 func (v Version) bump(major, minor, patch bool) Version {

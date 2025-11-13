@@ -121,3 +121,48 @@ func errNotEqual(errStr string, err error) bool {
 		return err == nil || err.Error() != errStr
 	}
 }
+
+func TestVersion_String(t *testing.T) {
+	tests := []struct {
+		major int
+		minor int
+		patch int
+		want  string
+	}{
+		{
+			want: "v0",
+		},
+		{
+			major: 1,
+			want:  "v1",
+		},
+		{
+			major: 2,
+			minor: 3,
+			want:  "v2.3",
+		},
+		{
+			major: 4,
+			minor: 5,
+			patch: 6,
+			want:  "v4.5.6",
+		},
+		{
+			major: 7,
+			patch: 8,
+			want:  "v7.0.8",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.want, func(t *testing.T) {
+			v := Version{
+				major: tt.major,
+				minor: tt.minor,
+				patch: tt.patch,
+			}
+			if got := v.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
