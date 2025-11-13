@@ -17,6 +17,8 @@ func main() {
 }
 
 func run() error {
+	// TODO ctx + interrupts
+
 	host, err := env("GITHUB_API_URL")
 	if err != nil {
 		return err
