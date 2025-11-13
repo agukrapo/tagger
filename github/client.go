@@ -35,11 +35,18 @@ type tagResponse []struct {
 }
 
 func (c *Client) LatestTag() (versions.Tag, error) {
-	// FIXME use token for private repos
-
-	res, err := c.client.Get(c.url("tags"))
+	req, err := http.NewRequest(http.MethodGet, c.url("tags"), nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("http.NewRequest: %w", err)
+	}
+
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("client.Do: %w", err)
 	}
 	defer res.Body.Close()
 
@@ -69,6 +76,8 @@ type compareResponse struct {
 }
 
 func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
+	// FIXME use token for private repos
+
 	res, err := c.client.Get(c.url(fmt.Sprintf("compare/%s...HEAD", tag)))
 	if err != nil {
 		return nil, err
