@@ -88,6 +88,13 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
+	defer func() {
+		fmt.Println("DEBUG info:")
+		for _, msg := range c.debugInfo {
+			fmt.Println(msg)
+		}
+	}()
+
 	sha, err := c.createTag(commit, version)
 	if err != nil {
 		return err
