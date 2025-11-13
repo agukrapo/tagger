@@ -94,7 +94,7 @@ type errorResponse struct {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	reqBody := fmt.Sprintf(`{"sha":%q,"ref":"refs/heads/%s"}`, commit.SHA(), version)
+	reqBody := fmt.Sprintf(`{"sha":%q,"ref":"refs/tags/%s"}`, commit.SHA(), version)
 	url := c.url("git/refs")
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(reqBody))
 	if err != nil {
