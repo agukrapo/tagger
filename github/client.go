@@ -37,25 +37,8 @@ type tagsResponse []struct {
 }
 
 func (c *Client) LatestTag() (versions.Tag, error) {
-	req, err := http.NewRequest(http.MethodGet, c.url("tags"), nil)
-	if err != nil {
-		return "", fmt.Errorf("http.NewRequest: %w", err)
-	}
-
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("Authorization", "Bearer "+c.token)
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-
-	res, err := c.client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("client.Do: %w", err)
-	}
-	defer res.Body.Close()
-
-	// TODO error response
-
 	var tags tagsResponse
-	if err := json.NewDecoder(res.Body).Decode(&tags); err != nil {
+	if err := c.send(http.MethodGet, "tags", "", &tags); err != nil {
 		return "", err
 	}
 
@@ -150,8 +133,13 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 		}
 	}()
 
+	var reader io.Reader
+	if body != "" {
+		reader = strings.NewReader(body)
+	}
+
 	url := c.url(path)
-	req, err := http.NewRequest(method, url, strings.NewReader(body))
+	req, err := http.NewRequest(method, url, reader)
 	if err != nil {
 		return fmt.Errorf("http.NewRequest: %w", err)
 	}
