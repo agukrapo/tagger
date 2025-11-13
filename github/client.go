@@ -63,18 +63,8 @@ type compareResponse struct {
 }
 
 func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
-	// FIXME use token for private repos
-
-	res, err := c.client.Get(c.url(fmt.Sprintf("compare/%s...HEAD", tag)))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	// TODO error response
-
 	var payload compareResponse
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	if err := c.send(http.MethodGet, fmt.Sprintf("compare/%s...HEAD", tag), "", &payload); err != nil {
 		return nil, err
 	}
 
