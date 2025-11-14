@@ -78,13 +78,6 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	defer func() {
-		fmt.Println("DEBUG info:")
-		for _, msg := range c.debugInfo {
-			fmt.Println(msg)
-		}
-	}()
-
 	sha, err := c.createTag(commit, version)
 	if err != nil {
 		return err
@@ -124,6 +117,7 @@ type errorResponse struct {
 func (c *Client) send(method, path, body string, out any) (err error) {
 	defer func() {
 		if err != nil {
+			fmt.Println("DEBUG info:")
 			for _, msg := range c.debugInfo {
 				fmt.Println(msg)
 			}
@@ -145,7 +139,7 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
-	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s, %s", path, url, body))
+	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s %s, %s", method, path, url, body))
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -158,7 +152,7 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 		return fmt.Errorf("io.ReadAll: %w", err)
 	}
 
-	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s response: %s, %s", path, res.Status, raw))
+	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s response: %s, %s\n", path, res.Status, raw))
 
 	if !strings.HasPrefix(res.Status, "2") {
 		var errRes errorResponse
