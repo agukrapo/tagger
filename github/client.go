@@ -95,7 +95,7 @@ func (c *Client) createTag(commit *versions.Commit, version versions.Version) (s
 	    "tag": %q,
 	    "message": "auto tag",
 	    "object": %q,
-	    "type": "tree",
+	    "type": "commit",
 	    "tagger": {
 	        "name": "Agustin Krapovickas",
 	        "email": "12501907+agukrapo@users.noreply.github.com"
