@@ -16,7 +16,12 @@ func main() {
 }
 
 func run() error {
-	return versions.Process(git.Client{})
+	client, err := git.SetupClient()
+	if err != nil {
+		return err
+	}
+
+	return versions.Process(client)
 
 	// TODO ctx + interrupts
 	// host, err := env("GITHUB_API_URL")

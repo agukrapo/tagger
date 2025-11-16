@@ -15,6 +15,22 @@ const noTagErr = "fatal: No names found, cannot describe anything."
 
 type Client struct{}
 
+func SetupClient() (Client, error) {
+	if _, err := command("git", "config", "--global", "--add", "safe.directory", "/github/workspace"); err != nil {
+		return Client{}, fmt.Errorf("git config: %w", err)
+	}
+
+	if _, err := command("git", "config", "--global", "user.name", "Tagger"); err != nil {
+		return Client{}, fmt.Errorf("git config: %w", err)
+	}
+
+	if _, err := command("git", "config", "--global", "user.email", "12501907+agukrapo@users.noreply.github.com"); err != nil {
+		return Client{}, fmt.Errorf("git config: %w", err)
+	}
+
+	return Client{}, nil
+}
+
 func (Client) LatestTag() (versions.Tag, error) {
 	out, err := command("git", "describe", "--tags", "--abbrev=0")
 	if err != nil {
@@ -62,19 +78,11 @@ func parse(line string) (*versions.Commit, bool) {
 }
 
 func (Client) Push(_ *versions.Commit, version versions.Version) error {
-	if _, err := command("git", "config", "user.name", "Tagger"); err != nil {
-		return fmt.Errorf("git config: %w", err)
-	}
-
-	if _, err := command("git", "config", "user.email", "12501907+agukrapo@users.noreply.github.com"); err != nil {
-		return fmt.Errorf("git config: %w", err)
-	}
-
 	if _, err := command("git", "tag", version.String()); err != nil {
 		return fmt.Errorf("git tag: %w", err)
 	}
 
-	if _, err := command("git", "push", "--follow-tags"); err != nil {
+	if _, err := command("git", "push", "origin", version.String()); err != nil {
 		return fmt.Errorf("git push: %w", err)
 	}
 
