@@ -136,8 +136,8 @@ type provider interface {
 	Push(*Commit, Version) error
 }
 
-func Process(p provider) error {
-	tag, err := p.LatestTag()
+func Process(local provider, api provider) error {
+	tag, err := api.LatestTag()
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func Process(p provider) error {
 
 	fmt.Println("Current version: ", version)
 
-	commits, err := p.CommitsSince(tag)
+	commits, err := api.CommitsSince(tag)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func Process(p provider) error {
 
 	lastCommit := commits[len(commits)-1]
 
-	if err := p.Push(lastCommit, newVersion); err != nil {
+	if err := local.Push(lastCommit, newVersion); err != nil {
 		return err
 	}
 
