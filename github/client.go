@@ -159,7 +159,7 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 		if err := json.Unmarshal(raw, &errRes); err != nil {
 			return fmt.Errorf("error json.Unmarshal: %w", err)
 		}
-		return fmt.Errorf("create tag failed: %s", errRes.Message)
+		return fmt.Errorf("%s failed: %s", path, errRes.Message)
 	}
 
 	if out != nil {
