@@ -20,14 +20,6 @@ func SetupClient() (Client, error) {
 		return Client{}, fmt.Errorf("git config: %w", err)
 	}
 
-	if _, err := command("git", "config", "--global", "user.name", "Tagger"); err != nil {
-		return Client{}, fmt.Errorf("git config: %w", err)
-	}
-
-	if _, err := command("git", "config", "--global", "user.email", "12501907+agukrapo@users.noreply.github.com"); err != nil {
-		return Client{}, fmt.Errorf("git config: %w", err)
-	}
-
 	return Client{}, nil
 }
 
