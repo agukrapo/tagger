@@ -130,13 +130,16 @@ func (c *Commit) change() Change {
 	return None
 }
 
-type provider interface {
+type fetcher interface {
 	LatestTag() (Tag, error)
 	CommitsSince(tag Tag) ([]*Commit, error)
+}
+
+type pusher interface {
 	Push(*Commit, Version) error
 }
 
-func Process(local provider, api provider) error {
+func Process(api fetcher, local pusher) error {
 	tag, err := api.LatestTag()
 	if err != nil {
 		return err

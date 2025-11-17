@@ -18,11 +18,6 @@ func main() {
 }
 
 func run() error {
-	local, err := git.SetupClient()
-	if err != nil {
-		return err
-	}
-
 	// TODO ctx + interrupts
 	host, err := env("GITHUB_API_URL")
 	if err != nil {
@@ -46,7 +41,12 @@ func run() error {
 
 	api := github.New(chunks[0], chunks[1], host, token)
 
-	return versions.Process(local, api)
+	local, err := git.SetupClient()
+	if err != nil {
+		return err
+	}
+
+	return versions.Process(api, local)
 }
 
 func env(name string) (string, error) {
