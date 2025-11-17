@@ -14,26 +14,26 @@ jobs:
       - name: Code checkout
         uses: actions/checkout@v5
       
-#      - name: Go setup
-#        uses: actions/setup-go@v6
-#        with:
-#          cache: false
-#          go-version-file: go.mod
-#
-#      - name: Install build dependencies
-#        run: make deps
-#
-#      - name: Code build
-#        run: make build
-#
-#      - name: Code format
-#        run: make format && git diff --exit-code
-#
-#      - name: Code test
-#        run: make test
-#
-#      - name: Code lint
-#        run: make lint
+      - name: Go setup
+        uses: actions/setup-go@v6
+        with:
+          cache: false
+          go-version-file: go.mod
+
+      - name: Install build dependencies
+        run: make deps
+
+      - name: Code build
+        run: make build
+
+      - name: Code format
+        run: make format && git diff --exit-code
+
+      - name: Code test
+        run: make test
+
+      - name: Code lint
+        run: make lint
 
       - name: Tagger
         uses: agukrapo/tagger@b93f98971397d81a520bbab09a7138575dc6963c
