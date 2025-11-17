@@ -1,5 +1,5 @@
 # Tagger
-Semantic versioning git tagger action.
+Pushes a git SemVer tag according to its commits messages
 
 ## Example usage
 

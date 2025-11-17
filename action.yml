@@ -1,5 +1,5 @@
 name: 'Tagger'
-description: 'auto pushes a git tag according to its commits messages'
+description: 'Pushes a git SemVer tag according to its commits messages'
 inputs:
   token:
     description: 'Repository github token'
