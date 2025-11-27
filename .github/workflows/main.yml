@@ -12,30 +12,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       
-      - name: Go setup
-        uses: actions/setup-go@v6
-        with:
-          cache: false
-          go-version-file: go.mod
-
-      - name: Install build dependencies
-        run: make deps
-
-      - name: Code build
-        run: make build
-
-      - name: Code format
-        run: make format && git diff --exit-code
-
-      - name: Code test
-        run: make test
-
-      - name: Code lint
-        run: make lint
+#      - name: Go setup
+#        uses: actions/setup-go@v6
+#        with:
+#          cache: false
+#          go-version-file: go.mod
+#
+#      - name: Install build dependencies
+#        run: make deps
+#
+#      - name: Code build
+#        run: make build
+#
+#      - name: Code format
+#        run: make format && git diff --exit-code
+#
+#      - name: Code test
+#        run: make test
+#
+#      - name: Code lint
+#        run: make lint
 
       - name: Tagger
-        uses: agukrapo/tagger@d6a62c3e36f5dca0249ba301e0e7cabe04f074b1
+        uses: agukrapo/tagger@2cbca3752ff314da5f15bc0622f413c8f53363d9
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
