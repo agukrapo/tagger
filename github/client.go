@@ -53,11 +53,9 @@ func (c *Client) LatestTag() (versions.Tag, error) {
 
 type compareResponse struct {
 	Commits []struct {
+		SHA  string `json:"sha"`
 		Data struct {
 			Message string `json:"message"`
-			Tree    struct {
-				Sha string `json:"sha"`
-			} `json:"tree"`
 		} `json:"commit"`
 	} `json:"commits"`
 }
@@ -71,7 +69,7 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	out := make([]*versions.Commit, 0, len(payload.Commits))
 	for _, commit := range payload.Commits {
 		chunks := strings.Split(commit.Data.Message, "\n")
-		out = append(out, versions.NewCommit(commit.Data.Tree.Sha, strings.TrimSpace(chunks[0])))
+		out = append(out, versions.NewCommit(commit.SHA, strings.TrimSpace(chunks[0])))
 	}
 
 	return out, nil
