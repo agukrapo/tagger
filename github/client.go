@@ -78,7 +78,19 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	body := fmt.Sprintf(`{"tag_name":%q,"target_commitish":%q}`, version, commit.SHA())
+	if err := c.createTagRef(commit, version); err != nil {
+		return err
+	}
+
+	return c.createRelease(version)
+}
+
+func (c *Client) createTagRef(commit *versions.Commit, version versions.Version) error {
+	return c.send(http.MethodPost, "git/refs", fmt.Sprintf(`{"sha":%q,"ref":"refs/tags/%s"}`, commit.SHA(), version), nil)
+}
+
+func (c *Client) createRelease(version versions.Version) error {
+	body := fmt.Sprintf(`{"tag_name":%q}`, version)
 
 	return c.send(http.MethodPost, "releases", body, nil)
 }
