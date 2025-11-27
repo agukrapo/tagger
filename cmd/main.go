@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/agukrapo/tagger/git"
 	"github.com/agukrapo/tagger/github"
 	"github.com/agukrapo/tagger/versions"
 )
@@ -40,12 +39,7 @@ func run() error {
 
 	api := github.New(chunks[0], chunks[1], host, token)
 
-	local, err := git.SetupClient()
-	if err != nil {
-		return err
-	}
-
-	return versions.Process(api, local)
+	return versions.Process(api, api)
 }
 
 func env(name string) (string, error) {

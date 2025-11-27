@@ -139,7 +139,7 @@ type pusher interface {
 	Push(*Commit, Version) error
 }
 
-func Process(api fetcher, local pusher) error {
+func Process(api fetcher, local pusher) error { // FIXME
 	tag, err := api.LatestTag()
 	if err != nil {
 		return err

@@ -78,36 +78,9 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 }
 
 func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	sha, err := c.createTag(commit, version)
-	if err != nil {
-		return err
-	}
+	body := fmt.Sprintf(`{"tag_name":%q,"target_commitish":%q}`, version, commit.SHA())
 
-	return c.createRef(sha, version)
-}
-
-type tagResponse struct {
-	SHA string `json:"sha"`
-}
-
-func (c *Client) createTag(commit *versions.Commit, version versions.Version) (string, error) {
-	body := fmt.Sprintf(`{
-	    "tag": %q,
-	    "message": "auto tag",
-	    "object": %q,
-	    "type": "commit",
-	    "tagger": {
-	        "name": "Agustin Krapovickas",
-	        "email": "12501907+agukrapo@users.noreply.github.com"
-	    }
-	}`, version, commit.SHA())
-
-	var out tagResponse
-	return out.SHA, c.send(http.MethodPost, "git/tags", body, &out)
-}
-
-func (c *Client) createRef(sha string, version versions.Version) error {
-	return c.send(http.MethodPost, "git/refs", fmt.Sprintf(`{"sha":%q,"ref":"refs/tags/%s"}`, sha, version), nil)
+	return c.send(http.MethodPost, "releases", body, nil)
 }
 
 type errorResponse struct {
