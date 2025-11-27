@@ -69,7 +69,7 @@ func parse(line string) (*versions.Commit, bool) {
 	return versions.NewCommit(matches[re.SubexpIndex("sha")], matches[re.SubexpIndex("message")]), true
 }
 
-func (Client) Push(_ *versions.Commit, version versions.Version) error {
+func (Client) Push(version versions.Version) error {
 	if _, err := command("git", "tag", version.String()); err != nil {
 		return fmt.Errorf("git tag: %w", err)
 	}

@@ -77,22 +77,42 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	return out, nil
 }
 
-func (c *Client) Push(commit *versions.Commit, version versions.Version) error {
-	if err := c.createTagRef(commit, version); err != nil {
-		return err
+func (c *Client) Release(version versions.Version, commits []*versions.Commit) error {
+	body := fmt.Sprintf(`{"tag_name":%q,"name":%q,"body":%q}`, version, version, c.changeLog(commits))
+	return c.send(http.MethodPost, "releases", body, nil)
+}
+
+func (c *Client) changeLog(commits []*versions.Commit) string {
+	var (
+		breaking string
+		feat     string
+		fix      string
+		other    string
+	)
+
+	appendTo := func(section, title, msg, sha string) string {
+		if section == "" {
+			section += fmt.Sprintf("#### %s:\n", title)
+		}
+		return section + fmt.Sprintf("- [%s](%s/%s)\n", msg, c.url("commit"), sha)
 	}
 
-	return c.createRelease(version)
-}
+	for _, commit := range commits {
+		change, msg := commit.Change()
+		switch change {
+		case versions.Breaking:
+			breaking += appendTo(breaking, "Breaking changes", msg, commit.SHA())
 
-func (c *Client) createTagRef(commit *versions.Commit, version versions.Version) error {
-	return c.send(http.MethodPost, "git/refs", fmt.Sprintf(`{"sha":%q,"ref":"refs/tags/%s"}`, commit.SHA(), version), nil)
-}
+		case versions.Feat:
+			feat += appendTo(feat, "New features", msg, commit.SHA())
+		case versions.Fix:
+			fix += appendTo(fix, "Bug fixes", msg, commit.SHA())
+		case versions.None:
+			other += appendTo(other, "Bug fixes", msg, commit.SHA())
+		}
+	}
 
-func (c *Client) createRelease(version versions.Version) error {
-	body := fmt.Sprintf(`{"tag_name":%q}`, version)
-
-	return c.send(http.MethodPost, "releases", body, nil)
+	return breaking + feat + fix + other
 }
 
 type errorResponse struct {

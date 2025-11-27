@@ -7,50 +7,58 @@ import (
 
 func TestCommit_Change(t *testing.T) {
 	tests := []struct {
-		name string
-		msg  string
-		want Change
+		name  string
+		msg   string
+		want1 Change
+		want2 string
 	}{
 		{
 			"Breaking",
 			"chore!: drop support for Node 6",
 			Breaking,
+			"drop support for Node 6",
 		},
 		{
 			"Breaking (scope)",
-			"feat(api)!: send an email to the customer when a product is shipped",
+			"feat(api)!: ASD123: send an email to the customer when a product is shipped",
 			Breaking,
+			"ASD123: send an email to the customer when a product is shipped",
 		},
-
 		{
 			"Feat",
 			"feat: allow provided config object to extend other configs",
 			Feat,
+			"allow provided config object to extend other configs",
 		},
 		{
 			"Feat (scope)",
 			"feat(lang): add Polish language",
 			Feat,
+			"add Polish language",
 		},
 		{
 			"Fix",
-			"fix: prevent racing of requests",
+			"fix: qwerty:prevent racing of requests",
 			Fix,
+			"qwerty:prevent racing of requests",
 		},
 		{
 			"Fix (scope)",
 			"fix(lang): prevent racing of requests",
 			Fix,
+			"prevent racing of requests",
 		},
 		{
 			"None",
 			"docs: correct spelling of CHANGELOG",
 			None,
+			"correct spelling of CHANGELOG",
 		},
 		{
 			"None (scope)",
 			"docs(lang): update ref docs",
 			None,
+			"update ref docs",
 		},
 	}
 	for _, tt := range tests {
@@ -58,8 +66,8 @@ func TestCommit_Change(t *testing.T) {
 			commit := &Commit{
 				message: tt.msg,
 			}
-			if got := commit.change(); got != tt.want {
-				t.Errorf("Change() = %v, want %v", got, tt.want)
+			if got1, got2 := commit.Change(); got1 != tt.want1 || got2 != tt.want2 {
+				t.Errorf("Change() = %v %v, want %v %v", got1, got2, tt.want1, tt.want2)
 			}
 		})
 	}

@@ -109,25 +109,26 @@ func (c *Commit) SHA() string {
 	return c.sha
 }
 
-func (c *Commit) change() Change {
+func (c *Commit) Change() (Change, string) {
 	chunks := strings.Split(c.message, ":")
 	if len(chunks) == 1 {
-		return None
+		return None, c.message
 	}
 
+	msg := strings.TrimSpace(strings.Join(chunks[1:], ":"))
 	if strings.HasSuffix(chunks[0], "!") {
-		return Breaking
+		return Breaking, msg
 	}
 
 	if strings.HasPrefix(chunks[0], "feat") {
-		return Feat
+		return Feat, msg
 	}
 
 	if strings.HasPrefix(chunks[0], "fix") {
-		return Fix
+		return Fix, msg
 	}
 
-	return None
+	return None, msg
 }
 
 type fetcher interface {
@@ -136,11 +137,15 @@ type fetcher interface {
 }
 
 type pusher interface {
-	Push(*Commit, Version) error
+	Push(Version) error
 }
 
-func Process(api fetcher, local pusher) error { // FIXME
-	tag, err := api.LatestTag()
+type releaser interface {
+	Release(Version, []*Commit) error
+}
+
+func Process(fetcher fetcher, pusher pusher, releaser releaser) error {
+	tag, err := fetcher.LatestTag()
 	if err != nil {
 		return err
 	}
@@ -152,7 +157,7 @@ func Process(api fetcher, local pusher) error { // FIXME
 
 	fmt.Println("Current version: ", version)
 
-	commits, err := api.CommitsSince(tag)
+	commits, err := fetcher.CommitsSince(tag)
 	if err != nil {
 		return err
 	}
@@ -161,7 +166,8 @@ func Process(api fetcher, local pusher) error { // FIXME
 	for _, commit := range commits {
 		fmt.Printf("Commit %s %q\n", commit.sha, commit.message)
 
-		switch commit.change() {
+		change, _ := commit.Change()
+		switch change {
 		case Breaking:
 			major = true
 		case Feat:
@@ -180,9 +186,11 @@ func Process(api fetcher, local pusher) error { // FIXME
 
 	fmt.Println("New version: ", newVersion)
 
-	lastCommit := commits[len(commits)-1]
+	if err := pusher.Push(newVersion); err != nil {
+		return err
+	}
 
-	if err := local.Push(lastCommit, newVersion); err != nil {
+	if err := releaser.Release(newVersion, commits); err != nil {
 		return err
 	}
 
