@@ -92,7 +92,7 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 
 	appendTo := func(section, title, msg, sha string) string {
 		if section == "" {
-			section += fmt.Sprintf("#### %s:\n", title)
+			section = fmt.Sprintf("#### %s:\n", title)
 		}
 		return section + fmt.Sprintf("- [%s](%s/%s)\n", msg, c.url("commit"), sha)
 	}
@@ -101,14 +101,13 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 		change, msg := commit.Change()
 		switch change {
 		case versions.Breaking:
-			breaking += appendTo(breaking, "Breaking changes", msg, commit.SHA())
-
+			breaking = appendTo(breaking, "Breaking changes", msg, commit.SHA())
 		case versions.Feat:
-			feat += appendTo(feat, "New features", msg, commit.SHA())
+			feat = appendTo(feat, "New features", msg, commit.SHA())
 		case versions.Fix:
-			fix += appendTo(fix, "Bug fixes", msg, commit.SHA())
+			fix = appendTo(fix, "Bug fixes", msg, commit.SHA())
 		case versions.None:
-			other += appendTo(other, "Bug fixes", msg, commit.SHA())
+			other = appendTo(other, "Other", msg, commit.SHA())
 		}
 	}
 
