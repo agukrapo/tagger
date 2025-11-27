@@ -94,7 +94,8 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 		if section == "" {
 			section = fmt.Sprintf("#### %s:\n", title)
 		}
-		return section + fmt.Sprintf("- [%s](%s/%s)\n", msg, c.url("commit"), sha)
+		url := fmt.Sprintf("https://github.com/%s/%s/commit/%s", c.owner, c.repo, sha)
+		return section + fmt.Sprintf("- [%s](%s)\n", msg, url)
 	}
 
 	for _, commit := range commits {
