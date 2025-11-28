@@ -41,7 +41,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT 
 
       - name: Tagger
-        uses: agukrapo/tagger@6d62eae85f159b0136a78c99b29313e0c9a789ba
+        uses: agukrapo/tagger@2f03bbb6231126275dc50df9226be1bf9c8e38ff
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           assets: zaraza.txt
