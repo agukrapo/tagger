@@ -57,7 +57,13 @@ func env(name string) (string, error) {
 
 func parseAssets() []string {
 	if assets, err := env("RELEASE_ASSETS"); err == nil {
-		return strings.Split(assets, "\n")
+		var out []string
+		for _, path := range strings.Split(assets, "\n") {
+			if path := strings.TrimSpace(path); path != "" {
+				out = append(out, path)
+			}
+		}
+		return out
 	}
 	return nil
 }

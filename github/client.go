@@ -131,7 +131,7 @@ func (c *Client) Release(version versions.Version, commits []*versions.Commit) e
 		}
 
 		if stat.IsDir() {
-			return fmt.Errorf("asset %q is a directory", name)
+			return fmt.Errorf("asset %q is a directory", stat.Name())
 		}
 
 		files = append(files, asset{stat.Name(), file, stat.Size()})
