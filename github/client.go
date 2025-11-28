@@ -2,7 +2,6 @@ package github
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -132,7 +131,7 @@ func (c *Client) Release(version versions.Version, commits []*versions.Commit) e
 		}
 
 		if stat.IsDir() {
-			return errors.New("asset is a directory")
+			return fmt.Errorf("asset %q is a directory", name)
 		}
 
 		files = append(files, asset{stat.Name(), file, stat.Size()})
