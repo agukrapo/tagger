@@ -35,16 +35,7 @@ jobs:
 #      - name: Code lint
 #        run: make lint
 
-      - name: Create a file
-        run: |
-          echo "some yadda" > zaraza.txt
-          echo "other yadda" > zaraza2.txt
-          echo "status=success" >> $GITHUB_OUTPUT 
-
       - name: Tagger
         uses: agukrapo/tagger@e6291a0b352abfd49f6cbdaacb11aaa830156ccf
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          assets: |
-            zaraza.txt
-            zaraza2.txt
