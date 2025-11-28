@@ -2,11 +2,11 @@ package github
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -41,6 +41,7 @@ func (c *Client) url(path string) string {
 type request struct {
 	method     string
 	reader     io.Reader
+	size       int64
 	name, body string
 	headers    map[string]string
 	url        string
@@ -104,6 +105,7 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 type asset struct {
 	name string
 	data io.ReadCloser
+	size int64
 }
 
 func (a asset) close() {
@@ -124,7 +126,16 @@ func (c *Client) Release(version versions.Version, commits []*versions.Commit) e
 			return err
 		}
 
-		files = append(files, asset{path.Base(name), file})
+		stat, err := file.Stat()
+		if err != nil {
+			return err
+		}
+
+		if stat.IsDir() {
+			return errors.New("asset is a directory")
+		}
+
+		files = append(files, asset{stat.Name(), file, stat.Size()})
 	}
 
 	uploadURL, err := c.createRelease(version, commits)
@@ -237,7 +248,11 @@ func (c *Client) send(in *request, out any) (err error) {
 		req.Header.Set(k, v)
 	}
 
-	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s %s, %s\n", in.name, in.method, in.url, in.body))
+	if in.size > 0 {
+		req.ContentLength = in.size
+	}
+
+	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s %s, %s", in.name, in.method, in.url, in.body))
 
 	res, err := c.client.Do(req)
 	if err != nil {
