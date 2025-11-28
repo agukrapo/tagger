@@ -42,7 +42,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT 
 
       - name: Tagger
-        uses: agukrapo/tagger@23369216d376f3810ee85256a1ebe5401fd6cf48
+        uses: agukrapo/tagger@ac1d7c0889cfaf0e12d78fdee8b43ae8a9954a49
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           assets: |
