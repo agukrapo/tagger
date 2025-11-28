@@ -194,10 +194,13 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 }
 
 func (c *Client) uploadAsset(url string, file asset) error {
+	url = strings.Replace(url, "{?name,label}", "?name="+file.name, 1)
+
 	req := &request{
 		method: http.MethodPost,
 		reader: file.data,
 		name:   "upload",
+		body:   "<binary>",
 		url:    url,
 		headers: map[string]string{
 			"Content-Type": "application/octet-stream",
