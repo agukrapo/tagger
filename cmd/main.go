@@ -57,7 +57,7 @@ func env(name string) (string, error) {
 
 func parseAssets() []string {
 	if assets, err := env("RELEASE_ASSETS"); err == nil {
-		return strings.Split(assets, "/n")
+		return strings.Split(assets, "\n")
 	}
 	return nil
 }
