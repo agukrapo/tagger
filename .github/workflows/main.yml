@@ -38,10 +38,13 @@ jobs:
       - name: Create a file
         run: |
           echo "some yadda" > zaraza.txt
+          echo "other yadda" > zaraza2.txt
           echo "status=success" >> $GITHUB_OUTPUT 
 
       - name: Tagger
         uses: agukrapo/tagger@23369216d376f3810ee85256a1ebe5401fd6cf48
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          assets: zaraza.txt
+          assets: |
+            zaraza.txt
+            zaraza2.txt
