@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/agukrapo/tagger/versions"
@@ -15,16 +18,19 @@ type Client struct {
 
 	owner, repo, host, token string
 
+	assets []string
+
 	debugInfo []string
 }
 
-func New(owner, repo, host, token string) *Client {
+func New(owner, repo, host, token string, assets []string) *Client {
 	return &Client{
 		client: http.DefaultClient,
 		owner:  owner,
 		repo:   repo,
 		host:   host,
 		token:  token,
+		assets: assets,
 	}
 }
 
@@ -32,13 +38,27 @@ func (c *Client) url(path string) string {
 	return fmt.Sprintf("%s/repos/%s/%s/%s", c.host, c.owner, c.repo, path)
 }
 
+type request struct {
+	method     string
+	reader     io.Reader
+	name, body string
+	headers    map[string]string
+	url        string
+}
+
 type tagsResponse []struct {
 	Name string `json:"name"`
 }
 
 func (c *Client) LatestTag() (versions.Tag, error) {
+	req := &request{
+		method: http.MethodGet,
+		name:   "tags",
+		url:    c.url("tags"),
+	}
+
 	var tags tagsResponse
-	if err := c.send(http.MethodGet, "tags", "", &tags); err != nil {
+	if err := c.send(req, &tags); err != nil {
 		return "", err
 	}
 
@@ -61,8 +81,14 @@ type compareResponse struct {
 }
 
 func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
+	req := &request{
+		method: http.MethodGet,
+		name:   "compare",
+		url:    c.url(fmt.Sprintf("compare/%s...HEAD", tag)),
+	}
+
 	var payload compareResponse
-	if err := c.send(http.MethodGet, fmt.Sprintf("compare/%s...HEAD", tag), "", &payload); err != nil {
+	if err := c.send(req, &payload); err != nil {
 		return nil, err
 	}
 
@@ -75,9 +101,63 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	return out, nil
 }
 
+type asset struct {
+	name string
+	data io.ReadCloser
+}
+
+func (a asset) close() {
+	_ = a.data.Close()
+}
+
 func (c *Client) Release(version versions.Version, commits []*versions.Commit) error {
+	var files []asset
+	defer func() {
+		for _, f := range files {
+			f.close()
+		}
+	}()
+
+	for _, name := range c.assets {
+		file, err := os.Open(filepath.Clean(name))
+		if err != nil {
+			return err
+		}
+
+		files = append(files, asset{path.Base(name), file})
+	}
+
+	uploadURL, err := c.createRelease(version, commits)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		if err := c.uploadAsset(uploadURL, file); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type releaseResponse struct {
+	UploadURL string `json:"upload_url"`
+}
+
+func (c *Client) createRelease(version versions.Version, commits []*versions.Commit) (string, error) {
 	body := fmt.Sprintf(`{"tag_name":%q,"name":%q,"body":%q}`, version, version, c.changeLog(commits))
-	return c.send(http.MethodPost, "releases", body, nil)
+
+	req := &request{
+		method: http.MethodPost,
+		reader: strings.NewReader(body),
+		name:   "releases",
+		body:   body,
+		url:    c.url("releases"),
+	}
+
+	var out releaseResponse
+	return out.UploadURL, c.send(req, &out)
 }
 
 func (c *Client) changeLog(commits []*versions.Commit) string {
@@ -113,11 +193,25 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 	return breaking + feat + fix + other
 }
 
+func (c *Client) uploadAsset(url string, file asset) error {
+	req := &request{
+		method: http.MethodPost,
+		reader: file.data,
+		name:   "upload",
+		url:    url,
+		headers: map[string]string{
+			"Content-Type": "application/octet-stream",
+		},
+	}
+
+	return c.send(req, nil)
+}
+
 type errorResponse struct {
 	Message string `json:"message"`
 }
 
-func (c *Client) send(method, path, body string, out any) (err error) {
+func (c *Client) send(in *request, out any) (err error) {
 	defer func() {
 		if err != nil {
 			fmt.Println("DEBUG info:")
@@ -127,13 +221,7 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 		}
 	}()
 
-	var reader io.Reader
-	if body != "" {
-		reader = strings.NewReader(body)
-	}
-
-	url := c.url(path)
-	req, err := http.NewRequest(method, url, reader)
+	req, err := http.NewRequest(in.method, in.url, in.reader)
 	if err != nil {
 		return fmt.Errorf("http.NewRequest: %w", err)
 	}
@@ -142,7 +230,11 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 	req.Header.Set("Authorization", "Bearer "+c.token)
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
-	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s %s, %s", method, path, url, body))
+	for k, v := range in.headers {
+		req.Header.Set(k, v)
+	}
+
+	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s request: %s %s, %s\n", in.name, in.method, in.url, in.body))
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -155,14 +247,14 @@ func (c *Client) send(method, path, body string, out any) (err error) {
 		return fmt.Errorf("io.ReadAll: %w", err)
 	}
 
-	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s response: %s, %s\n", path, res.Status, raw))
+	c.debugInfo = append(c.debugInfo, fmt.Sprintf("%s response: %s, %s\n", in.name, res.Status, raw))
 
 	if !strings.HasPrefix(res.Status, "2") {
 		var errRes errorResponse
-		if err := json.Unmarshal(raw, &errRes); err != nil {
+		if err := json.Unmarshal(raw, &errRes); err != nil && len(raw) != 0 {
 			return fmt.Errorf("error json.Unmarshal: %w", err)
 		}
-		return fmt.Errorf("%s failed: %s", path, errRes.Message)
+		return fmt.Errorf("%s failed: %s", in.name, errRes.Message)
 	}
 
 	if out != nil {

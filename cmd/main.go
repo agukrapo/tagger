@@ -38,7 +38,7 @@ func run() error {
 		return err
 	}
 
-	api := github.New(chunks[0], chunks[1], host, token)
+	api := github.New(chunks[0], chunks[1], host, token, parseAssets())
 
 	local, err := git.SetupClient()
 	if err != nil {
@@ -53,4 +53,11 @@ func env(name string) (string, error) {
 		return out, nil
 	}
 	return "", fmt.Errorf("environment variable %s not set", name)
+}
+
+func parseAssets() []string {
+	if assets, err := env("RELEASE_ASSETS"); err == nil {
+		return strings.Split(assets, "/n")
+	}
+	return nil
 }

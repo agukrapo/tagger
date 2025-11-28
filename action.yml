@@ -1,12 +1,21 @@
 name: 'Tagger'
-description: 'Pushes a git SemVer tag according to its commits messages'
+description: 'Pushes a git SemVer tag/release according to its commits messages'
+
+branding:
+  icon: 'tag'
+  color: 'green'
+
 inputs:
   token:
     description: 'Repository github token'
     required: true
+  assets:
+    description: 'Release assets'
+    required: false
 
 runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
     GITHUB_TOKEN: ${{ inputs.token }}
+    RELEASE_ASSETS: ${{ inputs.assets }}
