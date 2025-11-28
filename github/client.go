@@ -210,6 +210,7 @@ func (c *Client) uploadAsset(url string, file asset) error {
 	req := &request{
 		method: http.MethodPost,
 		reader: file.data,
+		size:   file.size,
 		name:   "upload",
 		body:   "<binary>",
 		url:    url,
