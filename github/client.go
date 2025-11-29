@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/agukrapo/tagger/versions"
@@ -17,12 +15,12 @@ type Client struct {
 
 	owner, repo, host, token string
 
-	assets []string
+	assets []Asset
 
 	debugInfo []string
 }
 
-func New(owner, repo, host, token string, assets []string) *Client {
+func New(owner, repo, host, token string, assets []Asset) *Client {
 	return &Client{
 		client: http.DefaultClient,
 		owner:  owner,
@@ -101,49 +99,28 @@ func (c *Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	return out, nil
 }
 
-type asset struct {
+type Asset struct {
 	name string
-	data io.ReadCloser
+	data io.Reader
 	size int64
 }
 
-func (a asset) close() {
-	_ = a.data.Close()
+func NewAsset(name string, data io.Reader, size int64) Asset {
+	return Asset{
+		name: name,
+		data: data,
+		size: size,
+	}
 }
 
 func (c *Client) Release(version versions.Version, commits []*versions.Commit) error {
-	var files []asset
-	defer func() {
-		for _, f := range files {
-			f.close()
-		}
-	}()
-
-	for _, name := range c.assets {
-		file, err := os.Open(filepath.Clean(name))
-		if err != nil {
-			return err
-		}
-
-		stat, err := file.Stat()
-		if err != nil {
-			return err
-		}
-
-		if stat.IsDir() {
-			return fmt.Errorf("asset %q is a directory", stat.Name())
-		}
-
-		files = append(files, asset{stat.Name(), file, stat.Size()})
-	}
-
 	uploadURL, err := c.createRelease(version, commits)
 	if err != nil {
 		return err
 	}
 
-	for _, file := range files {
-		if err := c.uploadAsset(uploadURL, file); err != nil {
+	for _, asset := range c.assets {
+		if err := c.uploadAsset(uploadURL, asset); err != nil {
 			return err
 		}
 	}
@@ -203,7 +180,7 @@ func (c *Client) changeLog(commits []*versions.Commit) string {
 	return breaking + feat + fix + other
 }
 
-func (c *Client) uploadAsset(url string, file asset) error {
+func (c *Client) uploadAsset(url string, file Asset) error {
 	url = strings.Replace(url, "{?name,label}", "?name="+file.name, 1)
 
 	req := &request{
