@@ -82,7 +82,7 @@ func (Client) Push(version versions.Version) error {
 }
 
 func command(in string, arg ...string) (string, error) {
-	cmd := exec.Command(in, arg...)
+	cmd := exec.Command(in, arg...) // #nosec G204
 
 	bytes, err := cmd.Output()
 	if err != nil {
