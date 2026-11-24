@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Code checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       
       - name: Go setup
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version-file: go.mod
@@ -36,6 +36,6 @@ jobs:
         run: make lint
 
       - name: Tagger
-        uses: agukrapo/tagger@v0.6
+        uses: agukrapo/tagger@v0.7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
