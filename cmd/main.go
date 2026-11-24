@@ -72,7 +72,7 @@ func parseAssets() ([]github.Asset, func(), error) {
 		out     []github.Asset
 		closers []func() error
 	)
-	for _, pattern := range strings.Split(assets, "\n") {
+	for pattern := range strings.SplitSeq(assets, "\n") {
 		pattern := strings.TrimSpace(pattern)
 		if pattern == "" {
 			continue

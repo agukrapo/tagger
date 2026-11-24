@@ -49,7 +49,7 @@ func (Client) CommitsSince(tag versions.Tag) ([]*versions.Commit, error) {
 	}
 
 	var out []*versions.Commit
-	for _, line := range strings.Split(commits, "\n") {
+	for line := range strings.SplitSeq(commits, "\n") {
 		if commit, ok := parse(line); ok {
 			out = append(out, commit)
 		}
