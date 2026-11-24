@@ -94,6 +94,7 @@ func parseAssets() ([]github.Asset, func(), error) {
 			if err != nil {
 				return nil, nil, err
 			}
+			closers = append(closers, file.Close)
 
 			stat, err := file.Stat()
 			if err != nil {
@@ -106,7 +107,6 @@ func parseAssets() ([]github.Asset, func(), error) {
 
 			count++
 			out = append(out, github.NewAsset(stat.Name(), file, stat.Size()))
-			closers = append(closers, file.Close)
 		}
 
 		if count == 0 {
